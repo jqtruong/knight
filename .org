@@ -1,0 +1,128 @@
+#+TITLE:               Knight
+#+AUTHOR:              Jerome Truong
+#+EMAIL:               jqtruong@ZEBRON
+#+DATE:                2013-04-05 Fri
+#+DESCRIPTION:         Puzzle game based on chess in which player is the knight and must find the quickest and clear path to check the opponent king.
+#+KEYWORDS:            Lisp, game, puzzle, AI
+#+LANGUAGE:            en
+#+OPTIONS:             H:3 num:nil toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:             TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+INFOJS_OPT:          view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS:  export
+#+EXPORT_EXCLUDE_TAGS: noexport
+
+* Objective
+  - Knight chesspiece is to find route to check the opponent's king without getting attacked
+  - May god have mercy on his souldd
+* Objects
+  - chesspiece
+    - parent of:
+      - knight
+      - pawn
+      - king
+      - queen
+      - bishop
+      - rook
+    - attributes
+      - name
+      - color
+    - methods
+      - moves
+      - special moves
+  - board
+    - attributes
+      - positions of every available pieces
+** Initialize
+   - each piece based on the current puzzle
+   - use class-of to retrieve ruleset of moves for piece, e.g.:
+     #+begin_src lisp
+       (class-of symbol)
+     #+end_src
+* AI
+** Moves
+*** Possible per turn
+    I.e. all the squares occupiable by the pieces if they were to move next, or the squares the knight needs to avoid when picking a path.
+**** Static
+     Just the line of sight, squares to avoid.
+**** Dynamic
+     The static ones as well as the next one read or even possibly an AI controlled if i may be so bold one day.
+*** Possible by knight
+    All the possible and clear paths calculated by the AI.
+** Rules
+*** Moves
+    - alist of moves per piece as symbol but pawn is so special...possibly the only special one
+    - how to structure the list...
+    - the game could have a status class, e.g.:
+      - beginning, which will let pawns use a different set of moves
+    - or each piece will find it's own set of statuses...best to complete the set then come back to pawns
+    - and how to do diagonals... thinking of using * as a symbol for wildcard
+    - each set will have to be filtered by what's actually available
+    - should be a macro to use the ruleset and return an alist of available moves for a particular piece at some point in time
+      - use `,symbol' to figure out which way is up
+        
+    #+begin_src lisp
+      ;; Change according to color
+      (defparameter *up* 1)
+      (defvar *moves-ruleset* 
+        (knight
+         ;; n
+         (1 (up 2)) (-1 (up 2))
+         ;; e
+         (2 (up)) (2 (down))
+         ;; s
+         (1 (down 2)) (-1 (down 2))
+         ;; w
+         (-2 (up)) (-2 (down)))
+      
+        (pawn
+         (normal (0 (up)))
+         (special-startup (0 (up)) (0 ((up) 2)))
+         (;; should be a condition for en-passant
+          attack (1 (up))
+                 (-1 (up))))
+      
+        (king
+         ;; clockwise
+         (0 (up))
+         (1 (up))
+         (1 0)
+         (1 (down))
+         (0 (down))
+         (-1 (down))
+         (-1 0)
+         (-1 (up)))
+      
+        (queen
+         ;; diagonals
+         (x (up x)) (x (down x)) (-x (up x)) (-x (down x))
+         ;; up down
+         (0 (up x)) (0 (down x))
+         ;; left right
+         (-x 0) (x 0))
+      
+        (bishop
+         ;; diagonals
+         (x (up x)) (x (down x)) (-x (up x)) (-x (down x)))
+      
+        (rook 
+         ;; up down
+         (0 (up x)) (0 (down x))
+         ;; left right
+         (-x 0) (x 0)))
+    #+end_src
+* Phases
+** 1. Basic Implementation
+*** Graphics
+    - board
+    - knight
+    - possible move icon
+*** Classes
+    - chess-piece
+    - knight
+    - subset of moves for knight
+    - board
+*** Goal
+    - random knight position
+    - draw board (with knight)
+    - get possible moves for knight
+    - draw possible moves for knight

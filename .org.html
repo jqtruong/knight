@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+               "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>Knight</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<meta name="title" content="Knight"/>
+<meta name="generator" content="Org-mode"/>
+<meta name="generated" content="2013-04-05 Fri"/>
+<meta name="author" content="Jerome Truong"/>
+<meta name="description" content="Puzzle game based on chess in which player is the knight and must find the quickest and clear path to check the opponent king."/>
+<meta name="keywords" content="Lisp, game, puzzle, AI"/>
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  html { font-family: Times, serif; font-size: 12pt; }
+  .title  { text-align: center; }
+  .todo   { color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #add8e6; font-weight:normal }
+  .target { }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  {margin-left:auto; margin-right:0px;  text-align:right;}
+  .left   {margin-left:0px;  margin-right:auto; text-align:left;}
+  .center {margin-left:auto; margin-right:auto; text-align:center;}
+  p.verse { margin-left: 3% }
+  pre {
+	border: 1pt solid #AEBDCC;
+	background-color: #F3F5F7;
+	padding: 5pt;
+	font-family: courier, monospace;
+        font-size: 90%;
+        overflow:auto;
+  }
+  table { border-collapse: collapse; }
+  td, th { vertical-align: top;  }
+  th.right  { text-align:center;  }
+  th.left   { text-align:center;   }
+  th.center { text-align:center; }
+  td.right  { text-align:right;  }
+  td.left   { text-align:left;   }
+  td.center { text-align:center; }
+  dt { font-weight: bold; }
+  div.figure { padding: 0.5em; }
+  div.figure p { text-align: center; }
+  div.inlinetask {
+    padding:10px;
+    border:2px solid gray;
+    margin:10px;
+    background: #ffffcc;
+  }
+  textarea { overflow-x: auto; }
+  .linenr { font-size:smaller }
+  .code-highlighted {background-color:#ffff00;}
+  .org-info-js_info-navigation { border-style:none; }
+  #org-info-js_console-label { font-size:10px; font-weight:bold;
+                               white-space:nowrap; }
+  .org-info-js_search-highlight {background-color:#ffff00; color:#000000;
+                                 font-weight:bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+
+</head>
+<body>
+
+<div id="preamble">
+
+</div>
+
+<div id="content">
+<h1 class="title">Knight</h1>
+
+
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">Objective</a></li>
+<li><a href="#sec-2">Objects</a>
+<ul>
+<li><a href="#sec-2-1">Initialize</a></li>
+</ul>
+</li>
+<li><a href="#sec-3">AI</a>
+<ul>
+<li><a href="#sec-3-1">Moves</a>
+<ul>
+<li><a href="#sec-3-1-1">Possible per turn</a></li>
+<li><a href="#sec-3-1-2">Possible by knight</a></li>
+</ul>
+</li>
+<li><a href="#sec-3-2">Rules</a>
+<ul>
+<li><a href="#sec-3-2-1">Moves</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-1" class="outline-2">
+<h2 id="sec-1">Objective</h2>
+<div class="outline-text-2" id="text-1">
+
+<ul>
+<li>Knight chesspiece is to find route to check the opponent's king without getting attacked
+</li>
+<li>May god have mercy on his souldd
+</li>
+</ul>
+
+
+
+</div>
+
+</div>
+
+<div id="outline-container-2" class="outline-2">
+<h2 id="sec-2">Objects</h2>
+<div class="outline-text-2" id="text-2">
+
+<ul>
+<li>chesspieces
+<ul>
+<li>knight
+</li>
+<li>pawn
+</li>
+<li>king
+</li>
+<li>queen
+</li>
+<li>bishop
+</li>
+<li>rook
+</li>
+</ul>
+
+</li>
+<li>attributes
+<ul>
+<li>name
+</li>
+<li>color
+</li>
+</ul>
+
+</li>
+<li>methods
+<ul>
+<li>moves
+</li>
+<li>special moves
+</li>
+</ul>
+
+</li>
+</ul>
+
+
+
+
+</div>
+
+<div id="outline-container-2-1" class="outline-3">
+<h3 id="sec-2-1">Initialize</h3>
+<div class="outline-text-3" id="text-2-1">
+
+<ul>
+<li>each piece based on the current puzzle
+</li>
+<li>use class-of to retrieve ruleset of moves for piece, e.g.:
+
+
+
+<pre class="example">(class-of symbol)
+</pre>
+
+</li>
+</ul>
+
+
+
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-3" class="outline-2">
+<h2 id="sec-3">AI</h2>
+<div class="outline-text-2" id="text-3">
+
+
+
+</div>
+
+<div id="outline-container-3-1" class="outline-3">
+<h3 id="sec-3-1">Moves</h3>
+<div class="outline-text-3" id="text-3-1">
+
+
+
+</div>
+
+<div id="outline-container-3-1-1" class="outline-4">
+<h4 id="sec-3-1-1">Possible per turn</h4>
+<div class="outline-text-4" id="text-3-1-1">
+
+<p>    I.e. all the squares occupiable by the pieces if they were to move next, or the squares the knight needs to avoid when picking a path.
+</p>
+
+<ul>
+<li id="sec-3-1-1-1">Static<br/>
+     Just the line of sight, squares to avoid.
+
+
+</li>
+</ul>
+<ul>
+<li id="sec-3-1-1-2">Dynamic<br/>
+     The static ones as well as the next one read or even possibly an AI controlled if i may be so bold one day.
+
+
+</li>
+</ul>
+</div>
+
+</div>
+
+<div id="outline-container-3-1-2" class="outline-4">
+<h4 id="sec-3-1-2">Possible by knight</h4>
+<div class="outline-text-4" id="text-3-1-2">
+
+<p>    All the possible and clear paths calculated by the AI.
+</p>
+
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-3-2" class="outline-3">
+<h3 id="sec-3-2">Rules</h3>
+<div class="outline-text-3" id="text-3-2">
+
+
+
+</div>
+
+<div id="outline-container-3-2-1" class="outline-4">
+<h4 id="sec-3-2-1">Moves</h4>
+<div class="outline-text-4" id="text-3-2-1">
+
+<ul>
+<li>alist of moves per piece as symbol but pawn is so special&hellip;possibly the only special one
+</li>
+<li>how to structure the list&hellip;
+</li>
+<li>the game could have a status class, e.g.:
+<ul>
+<li>beginning, which will let pawns use a different set of moves
+</li>
+</ul>
+
+</li>
+<li>or each piece will find it's own set of statuses&hellip;best to complete the set then come back to pawns
+</li>
+<li>and how to do diagonals&hellip; thinking of using * as a symbol for wildcard
+</li>
+<li>each set will have to be filtered by what's actually available
+</li>
+<li>should be a macro to use the ruleset and return an alist of available moves for a particular piece at some point in time
+<ul>
+<li>use `,symbol' to figure out which way is up
+</li>
+</ul>
+
+</li>
+</ul>
+
+
+
+
+
+<pre class="example">;; Change according to color
+(defparameter *up* 1)
+(defvar *moves-ruleset* 
+  (knight
+   ;; n
+   (1 (up 2)) (-1 (up 2))
+   ;; e
+   (2 (up)) (2 (down))
+   ;; s
+   (1 (down 2)) (-1 (down 2))
+   ;; w
+   (-2 (up)) (-2 (down)))
+
+  (pawn
+   (normal (0 (up)))
+   (special-startup (0 (up)) (0 ((up) 2)))
+   (;; should be a condition for en-passant
+    attack (1 (up))
+           (-1 (up))))
+
+  (king
+   ;; clockwise
+   (0 (up))
+   (1 (up))
+   (1 0)
+   (1 (down))
+   (0 (down))
+   (-1 (down))
+   (-1 0)
+   (-1 (up)))
+
+  (queen
+   ;; diagonals
+   (x (up x)) (x (down x)) (-x (up x)) (-x (down x))
+   ;; up down
+   (0 (up x)) (0 (down x))
+   ;; left right
+   (-x 0) (x 0))
+
+  (bishop
+   ;; diagonals
+   (x (up x)) (x (down x)) (-x (up x)) (-x (down x)))
+
+  (rook 
+   ;; up down
+   (0 (up x)) (0 (down x))
+   ;; left right
+   (-x 0) (x 0)))
+</pre>
+
+
+
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div id="postamble">
+<p class="date">Date: 2013-04-05 Fri</p>
+<p class="author">Author: Jerome Truong</p>
+<p class="creator">Org version 7.8.11 with Emacs version 24</p>
+<a href="http://validator.w3.org/check?uri=referer">Validate XHTML 1.0</a>
+
+</div>
+</body>
+</html>
